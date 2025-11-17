@@ -16,8 +16,7 @@ init(ctxt: ref Draw->Context, args: list of string)
 
 Graph: adt {
 	vertices: array of ref Vertex;
-	n: int;
-	m: int;
+	n, m: int;
 	id: string;
 };
 
@@ -29,9 +28,13 @@ Arc: adt {
 Vertex: adt {
 	name: string;
 	arcs: list of Arc;
-
 	rlink, llink, backlink: ref Vertex;
 	dist: int;
+};
+
+PriorityQueue: adt {
+	head: ref Vertex;
+	size: int;		 
 };
 
 new_graph(): ref Graph
@@ -60,11 +63,6 @@ new_arc(g: ref Graph, u, v: ref Vertex, length: int)
 	u.arcs = a :: u.arcs;
 	g.m++;
 }
-
-PriorityQueue: adt {
-	head: ref Vertex;
-	size: int;		 
-};
 
 new_pq(d: int): ref PriorityQueue
 {
