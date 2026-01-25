@@ -127,15 +127,11 @@ Arc: adt {
 
 ## Running Programs
 
-Programs are compiled to `.dis` bytecode files that run under the Inferno emulator:
+Programs are compiled to `.dis` bytecode files that run under the Inferno emulator using the mash shell which is like the Plan 9 shell rc:
 
 ```bash
-# Start Inferno emulator
-emu
-
-# Inside emu, run a program
-; load book
-; load board
+mash board.dis
+mash 'lc | wc'
 ```
 
 ## References
