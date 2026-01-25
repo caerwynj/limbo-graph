@@ -52,6 +52,11 @@ limbo board.b    # Build board graph generator
 limbo dijk2.b    # Build Dijkstra's algorithm
 ```
 
+### Run a dis file from the current folder
+```bash
+emu /dis/sh.dis -lc "book.dis"
+```
+
 ### Run tests
 ```bash
 mk test

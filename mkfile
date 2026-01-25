@@ -16,7 +16,7 @@ all:V:  $DIS
 
 tests:V: all $TEST_DIS
 	echo "Running board graph tests..."
-	emu boardtest.dis
+	emu /dis/sh.dis -lc boardtest.dis
 	echo ""
 	echo "To run comprehensive board tests, execute: ./run_board_tests.sh"
 
