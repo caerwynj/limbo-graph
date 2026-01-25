@@ -8,8 +8,9 @@ hash_table : array of list of ref Vertex;
 
 hash(s: string): int
 {
-	h, i: int = 0;
-	for (h=0; i < len s; i++) {
+	h, i: int;
+	h = 0;
+	for (i = 0; i < len s; i++) {
 		h += (h^(h>>1))+HASH_MULT*s[i];
 		while (h>=HASH_PRIME) h-=HASH_PRIME;
 	}
@@ -41,14 +42,13 @@ hash_setup(g: ref Graph)
 
 new_graph(): ref Graph
 {
-	g := ref Graph(nil,0,0,nil,nil,nil,nil,nil,nil);
-	g.vertices = array[256] of ref Vertex;
+	g := ref Graph(array[256] of ref Vertex, 0, 0, "", nil, nil, nil, nil, nil);
 	return g;
 }
 
 new_vert(g: ref Graph): ref Vertex
 {
-	v := ref Vertex(nil, nil, nil, nil, nil,nil,nil,nil);
+	v := ref Vertex("", nil, nil, nil, nil, nil, nil, nil);
 	if (g.n >= len g.vertices) {
 		a := array[len g.vertices * 2] of ref Vertex;
 		a[0:] = g.vertices;
