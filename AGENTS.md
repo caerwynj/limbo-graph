@@ -133,7 +133,17 @@ Programs are compiled to `.dis` bytecode files that run under the Inferno emulat
 mash board.dis
 mash 'lc | wc'
 ```
+## Debugging Programs
 
+Source level debug is available using the `debug` CLI inside inferno.
+```bash
+mash debug 
+> help
+> run /dis/ls.dis
+> next
+> stack
+> print argv
+```
 ## References
 
 - **Stanford GraphBase**: https://cs.stanford.edu/~knuth/sgb.html

@@ -42,7 +42,7 @@ hash_setup(g: ref Graph)
 
 new_graph(): ref Graph
 {
-	g := ref Graph(array[256] of ref Vertex, 0, 0, "", nil, nil, nil, nil, nil);
+	g := ref Graph(array[256] of ref Vertex, 0, 0, "", "", nil, nil, nil, nil, nil, nil);
 	return g;
 }
 

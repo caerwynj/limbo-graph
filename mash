@@ -1,8 +1,8 @@
 #!/bin/sh
 
-export ROOT=$HOME/inferno64
+export ROOT=$HOME/github/inferno64
 export SYSHOST=Linux
-export OBJTYPE=arm64
+export OBJTYPE=amd64
 
 case $# in
 0) args=sh;;

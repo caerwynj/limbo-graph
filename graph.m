@@ -6,7 +6,8 @@ Graphbase: module
 		n: int;
 		m: int;
 		id: string;
-		uu, ww, xx, yy, zz: ref Util;
+		util_types: string;
+		uu, vv, ww, xx, yy, zz: ref Util;
 	};
 
 	Arc: adt {
