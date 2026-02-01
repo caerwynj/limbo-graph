@@ -6,8 +6,8 @@ include "draw.m";
 include "graph.m";
 	gb: Graphbase;
 	Graph: import gb;
-include "board.m";
-	board_mod: Board;
+include "basic.m";
+	basic_mod: Basic;
 
 Command: module {
 	init: fn(ctxt: ref Draw->Context, argv: list of string);
@@ -17,16 +17,16 @@ init(nil: ref Draw->Context, nil: list of string)
 {
 	sys = load Sys Sys->PATH;
 	gb = load Graphbase Graphbase->PATH;
-	board_mod = load Board "./board.dis";
+	basic_mod = load Basic "./basic.dis";
 	
-	if (board_mod == nil) {
-		print("Failed to load Board module from ./board.dis\n");
+	if (basic_mod == nil) {
+		print("Failed to load Basic module from ./basic.dis\n");
 		return;
 	}
 	
-	print("Testing Board module...\n");
+	print("Testing Basic module (board)...\n");
 	
-	g := board_mod->board(3, 3, 0, 0, 1, 0, 0); # 3x3 wazir, undirected
+	g := basic_mod->board(3, 3, 0, 0, 1, 0, 0); # 3x3 wazir, undirected
 	if (g == nil) {
 		print("board() returned nil\n");
 		return;

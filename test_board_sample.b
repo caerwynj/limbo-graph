@@ -7,8 +7,8 @@ include "draw.m";
 include "graph.m";
 	gb: Graphbase;
 	Graph, Vertex, Arc, Util: import gb;
-include "board.m";
-	board_mod: Board;
+include "basic.m";
+	basic_mod: Basic;
 
 TestBoardSample: module
 {
@@ -19,10 +19,10 @@ init(nil: ref Draw->Context, nil: list of string)
 {
 	sys = load Sys Sys->PATH;
 	gb = load Graphbase Graphbase->PATH;
-	board_mod = load Board "./board.dis";
+	basic_mod = load Basic "./basic.dis";
 
-	if (board_mod == nil) {
-		print("Failed to load Board module\n");
+	if (basic_mod == nil) {
+		print("Failed to load Basic module\n");
 		return;
 	}
 
@@ -31,14 +31,12 @@ init(nil: ref Draw->Context, nil: list of string)
 	# wrap = -2^31 (MIN_INT)
 	min_int := int -2147483648; # Force int context
 	
-	g := board_mod->board(1, 1, 2, -33, 1, min_int, 1);
+	g := basic_mod->board(1, 1, 2, -33, 1, min_int, 1);
 	if (g == nil) {
 		print("Failed to create graph\n");
 		return;
 	}
 	
-	# The util_types for board are "ZZZIIIZZZZZZZZ"
-	# Vertices use x,y,z (indices 3,4,5) as Ints.
 	print_sample(g, 2000, "ZZZIIIZZZZZZZZ");
 }
 
@@ -54,16 +52,6 @@ print_sample(g: ref Graph, n: int, util_types: string)
 			
 		pr_util(g.uu, util_types[8], 0, util_types);
 		pr_util(g.ww, util_types[10], 0, util_types); # Limbo Graph has uu,ww,xx,yy,zz. Missing vv.
-		# sgb/test_sample.w prints uu, vv, ww, xx, yy, zz.
-		# If vv is missing in Limbo ADT, we skip it or print something else?
-		# util_types[9] is for vv. board uses 'Z' so it prints nothing.
-		# We'll just follow what we have.
-		
-		# Wait, print_sample prints all of them?
-		# pr_util(g->uu...); pr_util(g->vv...);
-		# If Limbo Graph lacks vv, we can't print it.
-		# But since type is Z, it outputs nothing anyway.
-		# xx, yy, zz are present.
 		pr_util(g.xx, util_types[11], 0, util_types);
 		pr_util(g.yy, util_types[12], 0, util_types);
 		pr_util(g.zz, util_types[13], 0, util_types);
@@ -129,8 +117,6 @@ pr_util(u: ref Util, c: int, l: int, s: string)
 			print("[");
 			if (u == nil) print("NULL");
 			else {
-				# Util.A holds ref Arc?
-				# Limbo Util: A => a: ref Arc;
 				pick x := u { A => pr_arc(*x.a, l, s); }
 			}
 			print("]");

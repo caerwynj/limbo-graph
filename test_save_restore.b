@@ -13,8 +13,8 @@ include "io.m";
 	io: GraphIO;
 include "save.m";
 	save_mod: Save;
-include "board.m";
-	board_mod: Board;
+include "basic.m";
+	basic_mod: Basic;
 
 TestSaveRestore: module {
 	init: fn(nil: ref Draw->Context, nil: list of string);
@@ -27,13 +27,13 @@ init(nil: ref Draw->Context, nil: list of string)
 	gb = load Graphbase Graphbase->PATH;
 	io = load GraphIO "./io.dis";
 	save_mod = load Save "./save.dis";
-	board_mod = load Board "./board.dis";
+	basic_mod = load Basic "./basic.dis";
 	
 	save_mod->init(sys, io, gb, bufio);
 	# board_mod->init(nil, nil); 
 	
 	print("Generating 3x3 board graph...\n");
-	g := board_mod->board(3, 3, 0, 0, 1, 0, 0);
+	g := basic_mod->board(3, 3, 0, 0, 1, 0, 0);
 	
 	print("Saving graph to 'test_sr.gb'...\n");
 	res := save_mod->save_graph(g, "test_sr.gb");

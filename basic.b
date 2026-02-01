@@ -1,13 +1,13 @@
-implement Board;
+implement Basic;
 
 include "sys.m";
 	sys: Sys;
 	print, sprint: import sys;
 include "draw.m";
+include "basic.m";
 include "graph.m";
 	gb: Graphbase;
 	Graph, Vertex, Arc, Util, new_graph, new_vert, new_arc: import gb;
-include "board.m";
 
 State: adt {
 	nn: array of int;
@@ -88,14 +88,9 @@ board(n1, n2, n3, n4, piece, wrap, directed: int): ref Graph
 	n = 1;
 	for (j = 1; j <= d; j++) n *= nn[j];
 	
-	# Pre-allocate vertices? Graphbase new_graph(n) in C allocates n vertices.
-	# Limbo graph.m new_graph() takes no args?
-	# board.b line 99: g = new_graph().
-	# board.b line 106: v := new_vert(g).
-	# It calls new_vert n times.
-	
 	g := new_graph();
 	g.id = sprint("board(%d,%d,%d,%d,%d,%d,%d)", n1, n2, n3, n4, piece, wrap, directed);
+	g.util_types = "IZZZZZZZZZZZZZ";
 
 	s := ref State;
 	s.nn = nn;
@@ -111,27 +106,30 @@ board(n1, n2, n3, n4, piece, wrap, directed: int): ref Graph
 	for (k = 0; k <= d; k++) s.xx[k] = 0;
 	s.nn[0] = 0; 
 	
+	g.vertices = array[n] of ref Vertex;
 	for (i = 0; i < n; i++) {
 		v := new_vert(g);
 		if (v == nil) {
 			print("Error: failed to create vertex %d\n", i);
 			break;
 		}
+		g.vertices[i] = v;
 		
 		# Name
 		nm := "";
 		for (k = 1; k <= d; k++) nm += sprint(".%d", s.xx[k]);
 		if (len nm > 0) v.name = nm[1:];
-		else v.name = ""; # Should not happen if d >= 1
+		else v.name = ""; 
 		
-		# Set util fields x, y, z for first 3 coordinates
-		if (d >= 1) v.x = ref Util.I(s.xx[1]);
-		if (d >= 2) v.y = ref Util.I(s.xx[2]);
-		if (d >= 3) v.z = ref Util.I(s.xx[3]);
+		# Set util fields
+		if (d >= 1) v.u = ref Util.I(s.xx[1]);
+		if (d >= 2) v.v = ref Util.I(s.xx[2]);
+		if (d >= 3) v.w = ref Util.I(s.xx[3]);
 
 		for (k = d; s.xx[k] + 1 == s.nn[k]; k--) s.xx[k] = 0;
 		if (k > 0) s.xx[k]++;
 	}
+	g.n = n;
 
 	w := wrap;
 	for (k = 1; k <= d; k++) {
@@ -213,8 +211,8 @@ State.generate_moves(s: self ref State, piece, directed: int)
 			for (k = 2; k <= s.d; k++) j = s.nn[k] * j + s.yy[k];
 			
 			u = s.g.vertices[j];
-			new_arc(s.g, v, u, l);
-			if (!directed) new_arc(s.g, u, v, l);
+			gb->new_arc(s.g, v, u, l);
+			if (!directed) gb->new_arc(s.g, u, v, l);
 
 			if (piece > 0) break;
 			for (k = 1; k <= s.d; k++) s.yy[k] += s.del[k];
@@ -222,4 +220,135 @@ State.generate_moves(s: self ref State, piece, directed: int)
 		for (k = s.d; s.xx[k] + 1 == s.nn[k]; k--) s.xx[k] = 0;
 		if (k > 0) s.xx[k]++;
 	}
+}
+
+gunion(g, gg: ref Graph, multi, directed: int): ref Graph
+{
+	if (sys == nil) sys = load Sys Sys->PATH;
+	if (gb == nil) gb = load Graphbase Graphbase->PATH;
+
+	if (g == nil || gg == nil) {
+		print("Missing operand\n");
+		return nil;
+	}
+
+	n := g.n;
+	new_graph := gb->new_graph();
+    new_graph.vertices = array[n] of ref Vertex;
+    
+	new_graph.id = sprint("gunion(%s,%s,%d,%d)", g.id, gg.id, multi, directed);
+    new_graph.util_types = g.util_types; 
+	
+	# Clear tmp fields in new_graph
+	for (i := 0; i < n; i++) {
+        v := gb->new_vert(new_graph);
+        new_graph.vertices[i] = v;
+        # Copy name from g
+        v.name = g.vertices[i].name;
+        
+        # Use v.u for tmp, v.w for tlen (though we only check tmp for now)
+		v.u = nil; 
+		v.w = nil; 
+	}
+
+	for (i = 0; i < n; i++) {
+		v := g.vertices[i];       # Vertex in g
+		vv := new_graph.vertices[i]; # Vertex in new_graph
+		
+        # Process arcs from g
+		for (l := v.arcs; l != nil; l = tl l) {
+            a := hd l;
+			tip_idx := find_vert_idx(g, a.tip);
+			if (tip_idx == -1) continue;
+			
+			u := new_graph.vertices[tip_idx];
+			
+			insert_union_arc(vv, u, a.length, multi, directed, new_graph);
+		}
+
+        # Process arcs from gg
+        if (i < gg.n) {
+            vvv := gg.vertices[i];
+            for (l := vvv.arcs; l != nil; l = tl l) {
+                a := hd l;
+                tip_idx := find_vert_idx(gg, a.tip);
+                if (tip_idx == -1) continue; 
+                
+                if (tip_idx < n) {
+                    u := new_graph.vertices[tip_idx];
+                    insert_union_arc(vv, u, a.length, multi, directed, new_graph);
+                }
+            }
+        }
+	}
+    
+    # Cleanup tmp fields
+    for (i = 0; i < n; i++) {
+        new_graph.vertices[i].u = nil;
+        new_graph.vertices[i].w = nil;
+    }
+
+	return new_graph;
+}
+
+get_util_v(u: ref Util): ref Vertex
+{
+	if (u == nil) return nil;
+	pick x := u {
+		V => return x.v;
+		* => return nil;
+	}
+	return nil;
+}
+
+insert_union_arc(vv, u: ref Vertex, length: int, multi, directed: int, g: ref Graph)
+{
+	if (directed) {
+        last_v := get_util_v(u.u);
+		if (multi || last_v == nil || last_v != vv) {
+			gb->new_arc(g, vv, u, length);
+        } else {
+            # Need update? For now we skip as per plan for queen demo
+            # if (u.w ...) check min length
+		}
+		u.u = ref Util.V(vv);
+		# u.w = ref Util.A(vv.arcs); # Skip tlen/w as we don't update
+		
+	} else {
+        # Undirected
+        # Check index condition vv <= u
+        idx_vv := find_vert_idx(g, vv); # O(N) search
+        idx_u := find_vert_idx(g, u);
+        
+        if (idx_u >= idx_vv) {
+            created := 0;
+            last_v := get_util_v(u.u);
+            
+    		if (multi || last_v == nil || last_v != vv) {
+                gb->new_arc(g, vv, u, length);
+                gb->new_arc(g, u, vv, length);
+                created = 1;
+    		} else {
+                 # Update logic skipped
+    		}
+    		u.u = ref Util.V(vv);
+    		# u.w = ...
+            
+            if (vv == u && created) {
+                # self loop, new_edge created two arcs vv->vv.
+                # Remove second one.
+                # v.arcs is stack. new_arc pushes.
+                # First new_arc pushes A1. Second new_arc pushes A2.
+                # Head is A2. We remove head.
+                if (vv.arcs != nil) vv.arcs = tl vv.arcs;
+            }
+        }
+	}
+}
+
+find_vert_idx(g: ref Graph, v: ref Vertex): int
+{
+	for(i := 0; i < g.n; i++)
+		if(g.vertices[i] == v) return i;
+	return -1;
 }
