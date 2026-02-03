@@ -2,3 +2,4 @@
 *.sbl
 *.s
 sgb/
+*.testout
